@@ -5,31 +5,44 @@ import authRoutes from './routes/auth.routes';
 import blogRoutes from './routes/blog.routes';
 import userRoutes from './routes/user.routes';
 
+dotenv.config();
+
 const app = express();
 
 app.use(express.json());
 
-
-// Middleware
+// CORS configuration
 app.use(cors({
-  origin: '*',
-  credentials: true
+  origin: process.env.CORS_ORIGIN || 'http://localhost:5173', // Updated to Vite's default port
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// Welcome endpoint
+app.get('/api', (_req, res) => {
+  res.status(200).json({
+    message: "Welcome to the Blog API",
+    endpoints: {
+      auth: '/api/auth/*',
+      blogs: '/api/blogs/*',
+      user: '/api/user/*'
+    }
+  });
+});
 
-// Routes
+// Mount routes
 app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/user', userRoutes);
 
-// Health check
 app.get('/health', (_req, res) => {
-  res.status(200).json({ message: "HOUSTON! Something went wrong!! noooo!!!! Blog API is running!" });
+  res.status(200).json({ message: "API is healthy and running" });
 });
 
 // 404 handler
-app.use('*', (_req, res) => {
-  res.status(404).json({ message: "HOUSTON! Something went wrong!! noooo!!!! Route not found" });
+app.use((_req, res) => {
+  res.status(404).json({ message: 'Route not found' });
 });
 
 export default app;
