@@ -1,5 +1,4 @@
 
-
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -11,7 +10,9 @@ dotenv.config();
 
 const app = express();
 
-app.use(express.json());
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // CORS configuration - improved to handle multiple origins
 const corsOptions = {
@@ -45,6 +46,19 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`, {
+    body: req.method !== 'GET' ? req.body : undefined,
+    query: Object.keys(req.query).length > 0 ? req.query : undefined,
+    headers: {
+      'content-type': req.headers['content-type'],
+      'authorization': req.headers.authorization ? 'Bearer token present' : 'No auth header'
+    }
+  });
+  next();
+});
+
 // Welcome endpoint
 app.get('/api', (_req, res) => {
   res.status(200).json({
@@ -67,8 +81,13 @@ app.get('/health', (_req, res) => {
 });
 
 // Global error handler
-app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('Global error handler:', err);
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Global error handler:', {
+    error: err.message,
+    stack: err.stack,
+    path: req.path,
+    method: req.method
+  });
   
   // Handle CORS errors
   if (err.message === 'Not allowed by CORS') {
@@ -83,8 +102,10 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 });
 
 // 404 handler
-app.use((_req, res) => {
+app.use((req, res) => {
+  console.log(`404 - Route not found: ${req.method} ${req.path}`);
   res.status(404).json({ message: 'Route not found' });
 });
 
 export default app;
+

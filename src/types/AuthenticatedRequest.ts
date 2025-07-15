@@ -1,4 +1,4 @@
-// src/types/AuthenticatedRequest.ts
+
 import { Request } from 'express';
 
 export interface AuthenticatedUser {
@@ -7,7 +7,7 @@ export interface AuthenticatedUser {
   email: string;
   firstName: string | null;
   lastName: string | null;
-  profileImage: string | null;
+  // profileImage: string | null;
 }
 
 interface AuthenticatedRequest extends Request {
